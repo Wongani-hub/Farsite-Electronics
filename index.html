@@ -39,7 +39,7 @@
 
     <!-- Hero Section -->
     <section id="home" class="hero">
-        <video class="hero-video" autoplay muted loop>
+        <video class="hero-video" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="Pictures/hero-section.jpg">
             <source src="New folder/hero section.mp4" type="video/mp4">
         </video>
         <div class="hero-content">
@@ -47,6 +47,8 @@
             <p class="hero-subtitle">Free Delivery & Phone Swap Deals Available</p>
             <button class="cta-button">Shop Now</button>
         </div>
+        <!-- Image fallback shown if autoplay fails -->
+        <div class="hero-fallback" style="background-image: url('Pictures/hero-section.jpg');" role="img" aria-label="Hero background"></div>
         <div class="hero-overlay"></div>
     </section>
 
@@ -62,7 +64,7 @@
 
     <!-- Phone Swap Section -->
     <section class="phone-swap">
-        <video class="swap-video" autoplay muted loop>
+        <video class="swap-video" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="Pictures/Swap deals.jpg">
             <source src="New folder/3096293491024012.mp4" type="video/mp4">
         </video>
         <div class="container">
@@ -209,6 +211,36 @@
         </div>
     </div>
 
+    <script>
+      (function () {
+        var hero = document.querySelector('.hero');
+        var video = document.querySelector('.hero-video');
+        if (!hero || !video) return;
+
+        try {
+          var playPromise = video.play && video.play();
+          if (playPromise && typeof playPromise.then === 'function') {
+            playPromise.catch(function () {
+              hero.classList.add('no-video');
+            });
+          }
+        } catch (e) {
+          hero.classList.add('no-video');
+        }
+
+        video.addEventListener('error', function () {
+          hero.classList.add('no-video');
+        });
+
+        // If metadata never loads (e.g., blocked, bad codec), fallback
+        var metadataTimeout = setTimeout(function () {
+          if (video.readyState < 1) hero.classList.add('no-video');
+        }, 4000);
+        video.addEventListener('loadedmetadata', function () {
+          clearTimeout(metadataTimeout);
+        });
+      })();
+    </script>
     <script src="product-data.js"></script>
     <script src="script.js"></script>
 </body>
