@@ -2,15 +2,17 @@
 const hamburger = document.querySelector('.hamburger');
 const navMenu = document.querySelector('.nav-menu');
 
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
-});
+if (hamburger && navMenu) {
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
+    });
+}
 
 // Close mobile menu when clicking on a link
 document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => {
-    hamburger.classList.remove('active');
-    navMenu.classList.remove('active');
+    if (hamburger) hamburger.classList.remove('active');
+    if (navMenu) navMenu.classList.remove('active');
 }));
 
 // Smooth scrolling for navigation links
@@ -30,6 +32,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // Navbar background change on scroll
 window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
+    if (!navbar) return;
     if (window.scrollY > 50) {
         navbar.style.background = 'rgba(0, 0, 0, 0.1)';
         navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
@@ -51,18 +54,23 @@ document.querySelectorAll('.product-card').forEach(card => {
 });
 
 // CTA Button click handler
-document.querySelector('.cta-button').addEventListener('click', () => {
-    document.getElementById('products').scrollIntoView({
-        behavior: 'smooth'
+const ctaBtn = document.querySelector('.cta-button');
+if (ctaBtn) {
+    ctaBtn.addEventListener('click', () => {
+        const products = document.getElementById('products');
+        if (products) products.scrollIntoView({ behavior: 'smooth' });
     });
-});
+}
 
 // Swap button click handler
-document.querySelector('.swap-btn').addEventListener('click', () => {
-    const swapMessage = `Hi! I'm interested in your phone swap deals. I have an old iPhone that I'd like to trade in for a newer model. Could you please provide me with a quote for the trade-in value and what models are available for swap?`;
-    const swapUrl = `https://wa.me/265880950026?text=${encodeURIComponent(swapMessage)}`;
-    window.open(swapUrl, '_blank');
-});
+const swapBtn = document.querySelector('.swap-btn');
+if (swapBtn) {
+    swapBtn.addEventListener('click', () => {
+        const swapMessage = `Hi! I'm interested in your phone swap deals. I have an old iPhone that I'd like to trade in for a newer model. Could you please provide me with a quote for the trade-in value and what models are available for swap?`;
+        const swapUrl = `https://wa.me/265880950026?text=${encodeURIComponent(swapMessage)}`;
+        window.open(swapUrl, '_blank');
+    });
+}
 
 // Modal elements
 const modal = document.getElementById('productModal');
@@ -70,21 +78,42 @@ const closeBtn = document.querySelector('.close');
 
 // Generate content when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, generating content...');
-    
     if (typeof generateProductCards === 'function') {
         generateProductCards();
-        console.log('Product cards generated');
+        // Start polling for updates every 30s if available
+        if (typeof startProductPolling === 'function') {
+            startProductPolling(30000);
+        }
     }
     
     if (typeof generateHappyCustomers === 'function') {
         generateHappyCustomers();
-        console.log('Happy customers generated');
     }
     
     if (typeof generateCustomerReviews === 'function') {
         generateCustomerReviews();
-        console.log('Customer reviews generated');
+    }
+    
+    // Refresh products when tab becomes visible (helps reflect admin changes quickly)
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && typeof refreshIfChanged === 'function') {
+            refreshIfChanged();
+        }
+    });
+
+    // Delegate clicks on dynamic product buttons to reliably open the modal
+    const grid = document.getElementById('productsGrid');
+    if (grid) {
+        grid.addEventListener('click', function(e){
+            const btn = e.target.closest('.product-btn');
+            if (!btn) return;
+            const card = btn.closest('.product-card');
+            if (!card) return;
+            const nameEl = card.querySelector('h3');
+            if (!nameEl) return;
+            const productName = nameEl.textContent;
+            if (typeof showProductDetails === 'function') showProductDetails(productName);
+        });
     }
 });
 
@@ -101,8 +130,13 @@ function showProductDetails(productName) {
     document.getElementById('modalAvailability').textContent = product.availability;
     
     // Show/hide phone-specific details
-    const isPhone = productName.includes('iPhone');
-    const isAccessory = productName.includes('AirPods') || productName.includes('Accessories');
+    const isPhone = (
+        product.batteryHealth !== undefined ||
+        product.faceId !== undefined ||
+        product.trueTone !== undefined ||
+        product.batteryReplaced !== undefined
+    );
+    const isAccessory = productName.toLowerCase().includes('airpods') || productName.toLowerCase().includes('accessories');
     
     if (isPhone) {
         document.getElementById('batteryHealthItem').style.display = 'flex';
@@ -110,6 +144,7 @@ function showProductDetails(productName) {
         document.getElementById('trueToneItem').style.display = 'flex';
         document.getElementById('batteryReplacedItem').style.display = 'flex';
         document.getElementById('conditionItem').style.display = 'flex';
+        document.getElementById('generationItem').style.display = 'none';
         
         document.getElementById('modalBatteryHealth').textContent = product.batteryHealth;
         document.getElementById('modalFaceId').textContent = product.faceId;
@@ -117,14 +152,23 @@ function showProductDetails(productName) {
         document.getElementById('modalBatteryReplaced').textContent = product.batteryReplaced;
         document.getElementById('modalCondition').textContent = product.condition;
     } else {
-        // Hide phone-specific details for accessories
+        // Hide phone-specific details
         document.getElementById('batteryHealthItem').style.display = 'none';
         document.getElementById('faceIdItem').style.display = 'none';
         document.getElementById('trueToneItem').style.display = 'none';
         document.getElementById('batteryReplacedItem').style.display = 'none';
-        document.getElementById('conditionItem').style.display = 'flex';
-        
-        document.getElementById('modalCondition').textContent = product.condition;
+        // Show AirPods generation if present, otherwise hide
+        const hasGeneration = product.generation !== undefined && product.generation !== '';
+        document.getElementById('generationItem').style.display = hasGeneration ? 'flex' : 'none';
+        if (hasGeneration) {
+            document.getElementById('modalGeneration').textContent = product.generation;
+        }
+        // Show condition row if provided
+        const hasCondition = product.condition !== undefined && product.condition !== '';
+        document.getElementById('conditionItem').style.display = hasCondition ? 'flex' : 'none';
+        if (hasCondition) {
+            document.getElementById('modalCondition').textContent = product.condition;
+        }
     }
     
     // Show modal
@@ -145,14 +189,16 @@ function showProductDetails(productName) {
 }
 
 // Close modal
-closeBtn.addEventListener('click', function() {
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-});
+if (closeBtn && modal) {
+    closeBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
+}
 
 // Close modal when clicking outside
 window.addEventListener('click', function(event) {
-    if (event.target === modal) {
+    if (modal && event.target === modal) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }
@@ -160,7 +206,7 @@ window.addEventListener('click', function(event) {
 
 // Close modal with Escape key
 document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape' && modal.style.display === 'block') {
+    if (event.key === 'Escape' && modal && modal.style.display === 'block') {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }

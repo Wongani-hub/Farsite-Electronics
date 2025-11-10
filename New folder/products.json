@@ -1,0 +1,18 @@
+[
+  {
+    "id": "f52e6e8b-bc84-4a4f-ae08-a092afef423c",
+    "name": "iphone 14",
+    "description": "clean",
+    "price": 120000,
+    "currency": "MWK",
+    "availability": "in stok",
+    "image": "/uploads/products/1762082296691-pbsho8gdkc.jpg",
+    "details": {
+      "batteryHealth": "",
+      "faceId": "",
+      "trueTone": "",
+      "batteryReplaced": "",
+      "condition": ""
+    }
+  }
+]

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Farsite Electronics</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="admin-header">
+    <div class="container" style="display:flex; align-items:center; justify-content:space-between;">
+      <h1 class="section-title" style="margin:0;">Admin Dashboard</h1>
+      <div>
+        <button id="logoutBtn" class="btn">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main container">
+    <section class="card">
+      <h2 class="section-title" style="font-size:1.5rem; margin-bottom:1rem;">Add / Update Product</h2>
+      <form id="productForm">
+        <input type="hidden" id="productId" />
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="name" required />
+          </div>
+          <div class="form-group">
+            <label>Product Type</label>
+            <select id="productType" required>
+              <option value="Iphones">Iphones</option>
+              <option value="Airpods">Airpods</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Three Pin Charger">Three Pin Charger</option>
+              <option value="Two Pin Charger">Two Pin Charger</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Price (MWK)</label>
+            <input type="number" id="price" required />
+          </div>
+          <div class="form-group">
+            <label>Availability</label>
+            <select id="availability">
+              <option value="In Stock">In Stock</option>
+              <option value="Out Of Stock">Out Of Stock</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Image</label>
+            <input type="file" id="image" accept="image/*" />
+          </div>
+          <input type="hidden" id="currentImage" />
+        </div>
+        <div class="form-group" style="margin-top:.5rem;">
+          <small>Formatted price: <strong id="pricePreview">MWK 0</strong></small>
+        </div>
+        <div id="details-iphones" data-type="Iphones">
+          <h3>Phone Details</h3>
+          <div class="grid-2">
+            <div class="form-group"><label>Battery Health</label><input type="text" id="batteryHealth" placeholder="95%" /></div>
+            <div class="form-group"><label>Face ID</label>
+              <select id="faceId">
+                <option value="Available">Available</option>
+                <option value="Not Available">Not Available</option>
+              </select>
+            </div>
+            <div class="form-group"><label>True Tone</label>
+              <select id="trueTone">
+                <option value="Available">Available</option>
+                <option value="Not Available">Not Available</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Battery Replaced</label>
+              <select id="batteryReplaced">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Condition</label>
+              <select id="condition">
+                <option value="Boxed">Boxed</option>
+                <option value="UnBoxed">UnBoxed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="details-airpods" data-type="Airpods" style="display:none;">
+          <h3>AirPods Details</h3>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Generation</label>
+              <select id="airpodsGeneration">
+                <option value="AirPods 1st Gen">AirPods 1st Gen</option>
+                <option value="AirPods 2nd Gen">AirPods 2nd Gen</option>
+                <option value="AirPods 3rd Gen">AirPods 3rd Gen</option>
+                <option value="AirPods Pro 1st Gen">AirPods Pro 1st Gen</option>
+                <option value="AirPods Pro 2nd Gen">AirPods Pro 2nd Gen</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Condition</label>
+              <select id="airpodsCondition">
+                <option value="Boxed">Boxed</option>
+                <option value="UnBoxed">UnBoxed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="details-accessories" data-type="Accessories">
+          <h3>Accessory Details</h3>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Accessory Type</label>
+              <select id="accessoryKind">
+                <option value="USB to Lightning">USB to Lightning</option>
+                <option value="C-Type to C-Type">C-Type to C-Type</option>
+                <option value="C-Type to Lightning">C-Type to Lightning</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Condition</label><input type="text" id="accessoryCondition" placeholder="Brand New, etc." /></div>
+          </div>
+        </div>
+        <div id="details-charger" data-type="Charger">
+          <h3>Charger Details</h3>
+          <div class="grid-2">
+            <div class="form-group"><label>Pin Type</label><input type="text" id="chargerPinType" readonly /></div>
+            <div class="form-group"><label>Wattage</label><input type="text" id="chargerWattage" placeholder="20W, 30W, etc." /></div>
+          </div>
+        </div>
+        <hr style="margin:1rem 0;">
+        <div class="card" id="productPreview" style="background:#0b1529; color:#fff;">
+          <div style="display:flex; gap:1rem; align-items:flex-start;">
+            <img id="previewImage" src="/admin/placeholder.svg" alt="Preview" style="width:120px;height:120px;object-fit:cover;border-radius:8px;background:#fff;"/>
+            <div>
+              <h3 id="previewName">Product name</h3>
+              <p id="previewPrice">MWK 0</p>
+              <div class="details-section">
+                <div class="detail-item"><span class="detail-label">Availability:</span> <span id="previewAvailability"></span></div>
+                <div class="detail-item" id="previewBatteryHealthItem" style="display:none;"><span class="detail-label">Battery Health:</span> <span id="previewBatteryHealth"></span></div>
+                <div class="detail-item" id="previewFaceIdItem" style="display:none;"><span class="detail-label">Face ID:</span> <span id="previewFaceId"></span></div>
+                <div class="detail-item" id="previewTrueToneItem" style="display:none;"><span class="detail-label">True Tone:</span> <span id="previewTrueTone"></span></div>
+                <div class="detail-item" id="previewBatteryReplacedItem" style="display:none;"><span class="detail-label">Battery Replaced:</span> <span id="previewBatteryReplaced"></span></div>
+                <div class="detail-item" id="previewConditionItem" style="display:none;"><span class="detail-label">Condition:</span> <span id="previewCondition"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn primary">Save</button>
+          <button type="button" id="resetForm" class="btn">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title" style="font-size:1.5rem; margin-bottom:1rem;">Products</h2>
+      <table class="table" id="productsTable">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Availability</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title" style="font-size:1.5rem; margin-bottom:1rem;">Manage Customer Reviews</h2>
+      <form id="reviewForm">
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="reviewName" required />
+          </div>
+          <div class="form-group">
+            <label>Rating</label>
+            <select id="reviewRating">
+              <option value="★★★★★">★★★★★</option>
+              <option value="★★★★☆">★★★★☆</option>
+              <option value="★★★☆☆">★★★☆☆</option>
+              <option value="★★☆☆☆">★★☆☆☆</option>
+              <option value="★☆☆☆☆">★☆☆☆☆</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label>Review</label>
+            <textarea id="reviewText" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Photo</label>
+            <input type="file" id="reviewImage" accept="image/*" />
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn primary">Add Review</button>
+          <button type="button" id="resetReviewForm" class="btn">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title" style="font-size:1.5rem; margin-bottom:1rem;">Reviews</h2>
+      <table class="table" id="reviewsTable">
+        <thead>
+          <tr>
+            <th>Photo</th>
+            <th>Name</th>
+            <th>Rating</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="/admin/main.js"></script>
+</body>
+</html>
