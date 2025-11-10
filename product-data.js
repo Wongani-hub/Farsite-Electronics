@@ -10,16 +10,6 @@ let PRODUCT_DATA = {
         batteryReplaced: 'No',
         condition: 'Brand New (Unboxed)'
     },
-    'iPhone 14': {
-        image: 'Pictures/Iphones/14ProMax3.jpg',
-        price: 'MWK 1,780,000',
-        availability: 'In Stock',
-        batteryHealth: '95%',
-        faceId: 'Available',
-        trueTone: 'Available',
-        batteryReplaced: 'No',
-        condition: 'Brand New (Unboxed)'
-    },
     'AirPods Pro 2': {
         image: 'Pictures/Iphones/Airpods pro 2.jpg',
         price: 'MWK 65,000',
@@ -51,34 +41,6 @@ let PRODUCT_DATA = {
         price: 'MWK 35,000',
         availability: 'In Stock',
         condition: 'Brand New (Unboxed)'
-    },
-    'Iphone 17 Pro Max': {
-        image: 'Pictures/Iphones/1762765803574-kid_gollf.jpg',
-        price: 'MWK 7,000,000',
-        availability: 'In Stock',
-        batteryHealth: '100%',
-        faceId: 'Available',
-        trueTone: 'Available',
-        batteryReplaced: 'No',
-        condition: 'Boxed'
-    },
-    'USB to Lightning': {
-        image: 'Pictures/Iphones/1762765450470-e27155ec78114ad153f41357e0f563f2.jpg',
-        price: 'MWK 45,000',
-        availability: 'In Stock',
-        condition: 'unboxed'
-    },
-    'Airpods': {
-        image: 'Pictures/Iphones/1762766930998-cafac912-eafa-480a-b070-82d4b1d89574.jpeg',
-        price: 'MWK 123,333',
-        availability: 'In Stock',
-        condition: 'UnBoxed'
-    },
-    'AirPods Pro 2nd Gen': {
-        image: 'Pictures/Iphones/1762767396956-Screenshot_2025-08-27_122539.png',
-        price: 'MWK 45,000',
-        availability: 'In Stock',
-        condition: 'Boxed'
     }
 };
 

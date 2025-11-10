@@ -1,0 +1,62 @@
+[
+  {
+    "id": "aVBob25lIDE0IFBybyBNYXg",
+    "name": "iPhone 14 Pro Max",
+    "description": "Brand New (Unboxed)",
+    "price": 2780000,
+    "currency": "MWK",
+    "availability": "In Stock",
+    "image": "Pictures/Iphones/Iphone 13Pro Max.jpg",
+    "details": {
+      "batteryHealth": "98%",
+      "faceId": "Available",
+      "trueTone": "Available",
+      "batteryReplaced": "No",
+      "condition": "Brand New (Unboxed)"
+    }
+  },
+  {
+    "id": "QWlyUG9kcyBQcm8gMg",
+    "name": "AirPods Pro 2",
+    "description": "Brand New (Unboxed)",
+    "price": 65000,
+    "currency": "MWK",
+    "availability": "In Stock",
+    "image": "Pictures/Iphones/Airpods pro 2.jpg",
+    "details": {
+      "condition": "Brand New (Unboxed)"
+    }
+  },
+  {
+    "id": "aVBob25lIDEzIFBybyBNYXg",
+    "name": "iPhone 13 Pro Max",
+    "description": "Excellent (Refurbished)",
+    "price": 2380000,
+    "currency": "MWK",
+    "availability": "In Stock",
+    "image": "Pictures/Iphones/13 Pro Max.jpg",
+    "details": {
+      "batteryHealth": "92%",
+      "faceId": "Available",
+      "trueTone": "Available",
+      "batteryReplaced": "Yes (2024)",
+      "condition": "Excellent (Refurbished)"
+    }
+  },
+  {
+    "id": "aVBob25lIDE0IFBybyBNYXggQmxhY2s",
+    "name": "iPhone 14 Pro Max Black",
+    "description": "Brand New (Unboxed)",
+    "price": 2780000,
+    "currency": "MWK",
+    "availability": "In Stock",
+    "image": "Pictures/Iphones/14proMaxblack1.jpg",
+    "details": {
+      "batteryHealth": "96%",
+      "faceId": "Available",
+      "trueTone": "Available",
+      "batteryReplaced": "No",
+      "condition": "Brand New (Unboxed)"
+    }
+  }
+]

@@ -21,6 +21,7 @@ const NEW_BASE_DIR = path.join(ROOT_DIR, 'New folder');
 const DATA_DIR = path.join(ROOT_DIR, 'data'); // legacy path (unused with product-data.js storage)
 const UPLOADS_DIR = path.join(NEW_BASE_DIR, 'uploads');
 const ADMIN_DIR = path.join(ROOT_DIR, 'admin');
+const PRODUCTS_JSON = path.join(ROOT_DIR, 'data', 'products.json');
 
 if (!fs.existsSync(NEW_BASE_DIR)) fs.mkdirSync(NEW_BASE_DIR);
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -168,28 +169,56 @@ function writeProductMapToJs(map) {
   fs.writeFileSync(ROOT_PRODUCT_DATA, newText);
 }
 
+// ---------- JSON storage for products (authoritative) ----------
+function readProductsJson() {
+  try {
+    if (!fs.existsSync(PRODUCTS_JSON)) return [];
+    const text = fs.readFileSync(PRODUCTS_JSON, 'utf8');
+    const arr = JSON.parse(text || '[]');
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+
+function writeProductsJson(list) {
+  try {
+    fs.mkdirSync(path.dirname(PRODUCTS_JSON), { recursive: true });
+    fs.writeFileSync(PRODUCTS_JSON, JSON.stringify(list || [], null, 2));
+  } catch (_) {}
+}
+
+function ensureProductsSeededFromJs() {
+  try {
+    const existing = readProductsJson();
+    if (existing && existing.length > 0) return;
+    const map = readProductMapFromJs();
+    const seeded = Object.entries(map).map(([name, p]) => ({
+      id: toId(name),
+      name,
+      description: p.condition || '',
+      price: Number(String(p.price || '').replace(/[^0-9.]/g, '')) || 0,
+      currency: 'MWK',
+      availability: p.availability || 'In Stock',
+      image: p.image || '',
+      details: {
+        batteryHealth: p.batteryHealth,
+        faceId: p.faceId,
+        trueTone: p.trueTone,
+        batteryReplaced: p.batteryReplaced,
+        condition: p.condition,
+        generation: p.generation
+      }
+    }));
+    if (seeded.length > 0) writeProductsJson(seeded);
+  } catch (_) {}
+}
+
 function toId(name) { return Buffer.from(name, 'utf8').toString('base64url'); }
 function fromId(id) { return Buffer.from(id, 'base64url').toString('utf8'); }
 function formatMWK(n) { try { return `MWK ${new Intl.NumberFormat('en-US').format(Number(n))}`; } catch { return `MWK ${n}`; } }
 
 function readProducts() {
-  const map = readProductMapFromJs();
-  return Object.entries(map).map(([name, p]) => ({
-    id: toId(name),
-    name,
-    description: p.condition || '',
-    price: Number(String(p.price || '').replace(/[^0-9.]/g, '')) || 0,
-    currency: 'MWK',
-    availability: p.availability || 'In Stock',
-    image: p.image || '',
-    details: {
-      batteryHealth: p.batteryHealth,
-      faceId: p.faceId,
-      trueTone: p.trueTone,
-      batteryReplaced: p.batteryReplaced,
-      condition: p.condition
-    }
-  }));
+  ensureProductsSeededFromJs();
+  return readProductsJson();
 }
 
 // Multer setup for image uploads with optional Pictures/<folder>/ target
@@ -404,76 +433,77 @@ app.delete('/api/reviews/:id', authRequired, (req, res) => {
 app.post('/api/products', authRequired, (req, res) => {
   const { name, description = '', price, currency = 'MWK', availability = 'In Stock', image = '', details = {} } = req.body || {};
   if (!name || price === undefined) return res.status(400).json({ error: 'Missing required fields: name, price' });
-  const map = readProductMapFromJs();
-  const priceStr = typeof price === 'string' ? price : formatMWK(price);
+  const list = readProductsJson();
   const normalizedImage = ensureImageInPictures(image, 'products');
-  map[name] = {
-    image: normalizedImage,
-    price: priceStr,
+  const item = {
+    id: toId(name),
+    name,
+    description,
+    price: typeof price === 'number' ? price : Number(String(price).replace(/[^0-9.]/g, '')) || 0,
+    currency,
     availability,
-    batteryHealth: details.batteryHealth,
-    faceId: details.faceId,
-    trueTone: details.trueTone,
-    batteryReplaced: details.batteryReplaced,
-    condition: details.condition || description
+    image: normalizedImage,
+    details: {
+      batteryHealth: details.batteryHealth,
+      faceId: details.faceId,
+      trueTone: details.trueTone,
+      batteryReplaced: details.batteryReplaced,
+      condition: details.condition || description,
+      generation: details.generation
+    }
   };
-  try {
-    writeProductMapToJs(map);
-  } catch (e) {
-    return res.status(500).json({ error: 'Failed to save product' });
-  }
-  const created = readProducts().find(p => p.name === name);
-  res.status(201).json(created);
+  // Upsert by name
+  const idx = list.findIndex(p => p.name === name);
+  if (idx >= 0) list[idx] = item; else list.push(item);
+  try { writeProductsJson(list); } catch (e) { return res.status(500).json({ error: 'Failed to save product' }); }
+  res.status(201).json(item);
 });
 
 app.put('/api/products/:id', authRequired, (req, res) => {
   const id = req.params.id;
   const currentName = fromId(id);
-  const map = readProductMapFromJs();
-  if (!map[currentName]) return res.status(404).json({ error: 'Not found' });
+  const list = readProductsJson();
+  const idx = list.findIndex(p => p.name === currentName);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
   const update = req.body || {};
-  const newName = update.name && update.name.trim() && update.name !== currentName ? update.name.trim() : currentName;
-  const existing = map[currentName];
-  const priceStr = update.price !== undefined ? (typeof update.price === 'string' ? update.price : formatMWK(update.price)) : existing.price;
+  const newName = update.name && update.name.trim() ? update.name.trim() : currentName;
+  const existing = list[idx];
   const normalizedImage = update.image !== undefined ? ensureImageInPictures(update.image, 'products') : existing.image;
-  const updatedEntry = {
-    image: normalizedImage,
-    price: priceStr,
+  const updated = {
+    ...existing,
+    id: toId(newName),
+    name: newName,
+    description: update.description !== undefined ? update.description : existing.description,
+    price: update.price !== undefined ? (typeof update.price === 'number' ? update.price : Number(String(update.price).replace(/[^0-9.]/g, '')) || 0) : existing.price,
+    currency: update.currency !== undefined ? update.currency : existing.currency,
     availability: update.availability !== undefined ? update.availability : existing.availability,
-    batteryHealth: (update.details && update.details.batteryHealth !== undefined) ? update.details.batteryHealth : existing.batteryHealth,
-    faceId: (update.details && update.details.faceId !== undefined) ? update.details.faceId : existing.faceId,
-    trueTone: (update.details && update.details.trueTone !== undefined) ? update.details.trueTone : existing.trueTone,
-    batteryReplaced: (update.details && update.details.batteryReplaced !== undefined) ? update.details.batteryReplaced : existing.batteryReplaced,
-    condition: (update.details && update.details.condition !== undefined) ? update.details.condition : (update.description !== undefined ? update.description : existing.condition)
+    image: normalizedImage,
+    details: {
+      ...(existing.details || {}),
+      ...(update.details || {})
+    }
   };
+  // If name changed and conflicts, replace; else assign
   if (newName !== currentName) {
-    delete map[currentName];
-    map[newName] = updatedEntry;
+    list.splice(idx, 1);
+    const otherIdx = list.findIndex(p => p.name === newName);
+    if (otherIdx >= 0) list[otherIdx] = updated; else list.push(updated);
   } else {
-    map[currentName] = updatedEntry;
+    list[idx] = updated;
   }
-  try {
-    writeProductMapToJs(map);
-  } catch (e) {
-    return res.status(500).json({ error: 'Failed to save product' });
-  }
-  const updated = readProducts().find(p => p.name === newName);
+  try { writeProductsJson(list); } catch (e) { return res.status(500).json({ error: 'Failed to save product' }); }
   res.json(updated);
 });
 
 app.delete('/api/products/:id', authRequired, (req, res) => {
   const id = req.params.id;
   const name = fromId(id);
-  const map = readProductMapFromJs();
-  if (!map[name]) return res.status(404).json({ error: 'Not found' });
-  const removed = { name, ...map[name] };
-  delete map[name];
-  try {
-    writeProductMapToJs(map);
-  } catch (e) {
-    return res.status(500).json({ error: 'Failed to delete product' });
-  }
-  res.json({ ok: true, removed: { id, name } });
+  const list = readProductsJson();
+  const idx = list.findIndex(p => p.name === name);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  const removed = list.splice(idx, 1)[0];
+  try { writeProductsJson(list); } catch (e) { return res.status(500).json({ error: 'Failed to delete product' }); }
+  res.json({ ok: true, removed: { id: removed.id, name: removed.name } });
 });
 
 // New product image upload route - saves to Pictures/<folder|Iphones>/ with timestamp + original filename
@@ -519,15 +549,12 @@ app.post('/api/reviews/upload-photo', authRequired, uploadReviewPhoto.single('im
   res.status(201).json({ url });
 });
 
-app.post('/api/uploads/reviews', authRequired, uploadReviewPhoto.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const url = `Pictures/Customer Reviews/${req.file.filename}`;
-  res.status(201).json({ url });
-});
+// Removed duplicate reviews upload route ('/api/uploads/reviews') in favor of '/api/reviews/upload-photo'
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 ensureReviewsSeeded();
+ensureProductsSeededFromJs();
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
