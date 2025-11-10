@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof showProductDetails === 'function') showProductDetails(productName);
         });
     }
+
 });
 
 // Show product details modal

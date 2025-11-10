@@ -67,7 +67,11 @@ const staticOptions = {
 // Expose Pictures directory for public access
 app.use('/Pictures', express.static(path.join(ROOT_DIR, 'Pictures'), staticOptions));
 app.use('/uploads', express.static(UPLOADS_DIR, staticOptions));
-app.use('/admin', express.static(ADMIN_DIR));
+app.use('/admin', express.static(ADMIN_DIR, {
+  setHeaders: (res, _filePath) => {
+    res.set('Cache-Control', 'no-store');
+  }
+}));
 
 // Simple password check (supports either plaintext or bcrypt hash in env)
 function verifyPassword(input, expected) {
